@@ -6,6 +6,8 @@ export const initialQuizState = {
   points: 0,
   secondsRemaining: 15,
   highscore: 0,
+  requestOptions: null,
+  errorMessage: null,
 };
 
 function finishQuiz(state) {
@@ -45,6 +47,8 @@ export function quizReducer(state, action) {
           answer: null,
           points: 0,
           secondsRemaining: 15,
+          requestOptions: action.options,
+          errorMessage: null,
         };
       }
 
@@ -53,7 +57,11 @@ export function quizReducer(state, action) {
     case 'dataReceived':
       if (state.status !== 'loading') return state;
       if (!hasValidQuestions(action.questions)) {
-        return { ...state, status: 'error' };
+        return {
+          ...state,
+          status: 'error',
+          errorMessage: 'The trivia service returned invalid questions. Please try again.',
+        };
       }
 
       return {
@@ -64,10 +72,13 @@ export function quizReducer(state, action) {
         answer: null,
         points: 0,
         secondsRemaining: 15,
+        errorMessage: null,
       };
 
     case 'dataFailed':
-      return state.status === 'loading' ? { ...state, status: 'error' } : state;
+      return state.status === 'loading'
+        ? { ...state, status: 'error', errorMessage: action.message }
+        : state;
 
     case 'newAnswer': {
       if (state.status !== 'active' || state.answer !== null) return state;

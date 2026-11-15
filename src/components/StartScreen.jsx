@@ -1,6 +1,20 @@
+import { useState } from 'react';
+import ErrorMessage from './ErrorMessage.jsx';
+import Loading from './Loading.jsx';
 import styles from './StartScreen.module.css';
 
-function StartScreen({ onStart }) {
+function StartScreen({
+  onStart,
+  categories,
+  categoriesStatus,
+  categoriesError,
+  onRetryCategories,
+}) {
+  const [categoryId, setCategoryId] = useState('9');
+  const [difficulty, setDifficulty] = useState('easy');
+  const [amount, setAmount] = useState('10');
+  const canStart = categoriesStatus === 'ready' && categories.length > 0;
+
   return (
     <section className={styles.layout}>
       <div className={styles.intro}>
@@ -10,7 +24,13 @@ function StartScreen({ onStart }) {
         <div className={styles.sparkle} aria-hidden="true">✳</div>
       </div>
 
-      <form className={styles.card} onSubmit={(event) => { event.preventDefault(); onStart(); }}>
+      <form
+        className={styles.card}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onStart({ amount, categoryId, difficulty });
+        }}
+      >
         <div className={styles.cardHeading}>
           <div>
             <h2>Set up your quiz</h2>
@@ -21,18 +41,32 @@ function StartScreen({ onStart }) {
 
         <label className={styles.field}>
           <span>Choose a category</span>
-          <select defaultValue="general">
-            <option value="general">🌈  General knowledge</option>
-            <option value="science">🔬  Science & nature</option>
-            <option value="history">🏛️  History</option>
-            <option value="arts">🎨  Arts & culture</option>
+          <select
+            value={categoryId}
+            onChange={(event) => setCategoryId(event.target.value)}
+            disabled={!canStart}
+          >
+            {categories.map((category) => (
+              <option value={category.id} key={category.id}>{category.name}</option>
+            ))}
           </select>
         </label>
+        {categoriesStatus === 'loading' && (
+          <Loading compact message="Loading categories…" />
+        )}
+        {categoriesStatus === 'error' && (
+          <ErrorMessage
+            compact
+            message={categoriesError}
+            actionLabel="Retry categories"
+            onRetry={onRetryCategories}
+          />
+        )}
 
         <div className={styles.fieldRow}>
           <label className={styles.field}>
             <span>Difficulty</span>
-            <select defaultValue="easy">
+            <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
               <option value="easy">Easy breezy</option>
               <option value="medium">A bit tricky</option>
               <option value="hard">Brain bender</option>
@@ -40,7 +74,7 @@ function StartScreen({ onStart }) {
           </label>
           <label className={styles.field}>
             <span>Questions</span>
-            <select defaultValue="5">
+            <select value={amount} onChange={(event) => setAmount(event.target.value)}>
               <option value="5">5 questions</option>
               <option value="10">10 questions</option>
               <option value="15">15 questions</option>
@@ -48,7 +82,7 @@ function StartScreen({ onStart }) {
           </label>
         </div>
 
-        <button className={styles.startButton} type="submit">
+        <button className={styles.startButton} type="submit" disabled={!canStart}>
           Let’s play <span aria-hidden="true">→</span>
         </button>
         <div className={styles.cardFoot}><span aria-hidden="true">◷</span> Takes about 2 minutes</div>

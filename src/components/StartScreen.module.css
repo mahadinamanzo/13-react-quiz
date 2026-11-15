@@ -154,6 +154,13 @@
   background: #6652ce;
 }
 
+.startButton:disabled {
+  transform: none;
+  background: #aaa4d3;
+  box-shadow: none;
+  cursor: wait;
+}
+
 .startButton span {
   font-size: 1.15rem;
 }

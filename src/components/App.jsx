@@ -1,18 +1,77 @@
-import { useEffect, useReducer } from 'react';
-import { questions } from '../data/questions.js';
+import { useEffect, useReducer, useState } from 'react';
+import { fetchCategories, fetchQuestions } from '../api/opentdb.js';
 import { initialQuizState, quizReducer } from '../reducers/quizReducer.js';
 import StartScreen from './StartScreen.jsx';
 import Question from './Question.jsx';
 import ProgressBar from './ProgressBar.jsx';
 import Timer from './Timer.jsx';
 import ResultScreen from './ResultScreen.jsx';
+import Loading from './Loading.jsx';
+import ErrorMessage from './ErrorMessage.jsx';
 import styles from './App.module.css';
 
 function App() {
   const [state, dispatch] = useReducer(quizReducer, initialQuizState);
-  const { status, questions: quizQuestions, index, answer, points, secondsRemaining, highscore } = state;
+  const {
+    status,
+    questions: quizQuestions,
+    index,
+    answer,
+    points,
+    secondsRemaining,
+    highscore,
+    requestOptions,
+    errorMessage,
+  } = state;
   const currentQuestion = quizQuestions[index];
   const totalQuestions = quizQuestions.length;
+  const [categoryState, setCategoryState] = useState({
+    status: 'loading',
+    categories: [],
+    error: null,
+  });
+  const [categoryRetry, setCategoryRetry] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setCategoryState({ status: 'loading', categories: [], error: null });
+
+    fetchCategories(controller.signal)
+      .then((categories) => {
+        setCategoryState({ status: 'ready', categories, error: null });
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        setCategoryState({
+          status: 'error',
+          categories: [],
+          error: error instanceof Error ? error.message : 'Could not load quiz categories.',
+        });
+      });
+
+    return () => controller.abort();
+  }, [categoryRetry]);
+
+  useEffect(() => {
+    if (status !== 'loading' || !requestOptions) return undefined;
+
+    const controller = new AbortController();
+    async function loadQuestions() {
+      try {
+        const receivedQuestions = await fetchQuestions(requestOptions, controller.signal);
+        dispatch({ type: 'dataReceived', questions: receivedQuestions });
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        dispatch({
+          type: 'dataFailed',
+          message: error instanceof Error ? error.message : 'Could not load quiz questions.',
+        });
+      }
+    }
+
+    loadQuestions();
+    return () => controller.abort();
+  }, [status, requestOptions]);
 
   useEffect(() => {
     if (status === 'ready') dispatch({ type: 'start' });
@@ -23,11 +82,10 @@ function App() {
 
     const timerId = window.setInterval(() => dispatch({ type: 'tick' }), 1000);
     return () => window.clearInterval(timerId);
-  }, [status]);
+  }, [status, index]);
 
-  function handleStart() {
-    dispatch({ type: 'start' });
-    dispatch({ type: 'dataReceived', questions });
+  function handleStart(options) {
+    dispatch({ type: 'start', options });
   }
 
   return (
@@ -48,21 +106,29 @@ function App() {
         <span className={styles.headerNote}>A little brain boost</span>
       </header>
 
-      {status === 'idle' && <StartScreen onStart={handleStart} />}
+      {status === 'idle' && (
+        <StartScreen
+          onStart={handleStart}
+          categories={categoryState.categories}
+          categoriesStatus={categoryState.status}
+          categoriesError={categoryState.error}
+          onRetryCategories={() => setCategoryRetry((attempt) => attempt + 1)}
+        />
+      )}
 
       {(status === 'loading' || status === 'ready') && (
         <section className={styles.quizScreen} aria-live="polite">
-          <p>Getting your quiz ready…</p>
+          <Loading message="Loading your questions…" />
         </section>
       )}
 
       {status === 'error' && (
         <section className={styles.quizScreen} role="alert">
-          <h1>We couldn’t load your quiz.</h1>
-          <p>Please try again.</p>
-          <button className={styles.nextButton} onClick={() => dispatch({ type: 'restart' })}>
-            Back to start
-          </button>
+          <ErrorMessage
+            message={errorMessage ?? 'We couldn’t load your quiz. Please try again.'}
+            actionLabel="Back to setup"
+            onRetry={() => dispatch({ type: 'restart' })}
+          />
         </section>
       )}
 

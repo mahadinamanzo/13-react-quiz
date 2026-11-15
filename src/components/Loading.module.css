@@ -1,0 +1,37 @@
+.loading {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.compact {
+  min-height: 28px;
+  justify-content: flex-start;
+  margin: -7px 0 15px;
+  font-size: 0.75rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e8e4fb;
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  animation: spin 750ms linear infinite;
+}
+
+.compact .spinner {
+  width: 15px;
+  height: 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
