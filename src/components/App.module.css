@@ -1,0 +1,153 @@
+.app {
+  width: min(100% - 40px, 1040px);
+  min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 27px 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 1.27rem;
+  font-weight: 850;
+  letter-spacing: -0.07em;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--purple);
+  color: white;
+  font-size: 1.2rem;
+  font-style: italic;
+  letter-spacing: -0.08em;
+  box-shadow: 0 5px 12px #7662df38;
+}
+
+.brandDot {
+  color: var(--purple);
+}
+
+.headerNote {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.quizScreen {
+  width: min(100%, 700px);
+  margin: 38px auto 0;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px #25305a0b;
+}
+
+.quizMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.categoryPill {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #f0edff;
+  color: #6654c7;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.quizFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.footerHint {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.nextButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 17px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ink);
+  color: white;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  background: #333c67;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 30px 0 22px;
+  color: #9298ad;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.footer span {
+  padding-left: 4px;
+  color: #f1b84c;
+}
+
+@media (max-width: 600px) {
+  .app {
+    width: min(100% - 28px, 1040px);
+  }
+
+  .header {
+    padding: 19px 0;
+  }
+
+  .headerNote {
+    font-size: 0.75rem;
+  }
+
+  .quizScreen {
+    margin-top: 20px;
+    padding: 22px 18px;
+    border-radius: 19px;
+  }
+
+  .quizFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nextButton {
+    justify-content: center;
+  }
+}

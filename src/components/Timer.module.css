@@ -1,0 +1,14 @@
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #5b627a;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock {
+  color: #edaa4a;
+  font-size: 1.15rem;
+}
