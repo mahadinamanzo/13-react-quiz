@@ -17,6 +17,7 @@ function Question({ question, questionNumber, total, answer, onAnswer }) {
             type="button"
             disabled={answer !== null}
             aria-pressed={answer === option}
+            aria-keyshortcuts={String(index + 1)}
             onClick={() => onAnswer(option)}
           >
             <span className={styles.letter}>{String.fromCharCode(65 + index)}</span>

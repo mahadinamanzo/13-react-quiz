@@ -1,5 +1,6 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { fetchCategories, fetchQuestions } from '../api/opentdb.js';
+import useLocalStorageState from '../hooks/useLocalStorageState.js';
 import { initialQuizState, quizReducer } from '../reducers/quizReducer.js';
 import StartScreen from './StartScreen.jsx';
 import Question from './Question.jsx';
@@ -12,6 +13,11 @@ import styles from './App.module.css';
 
 function App() {
   const [state, dispatch] = useReducer(quizReducer, initialQuizState);
+  const [storedHighscore, setStoredHighscore] = useLocalStorageState('quizzy-highscore', 0);
+  const highscore = Number.isSafeInteger(storedHighscore) && storedHighscore >= 0
+    ? storedHighscore
+    : 0;
+  const nextButtonRef = useRef(null);
   const {
     status,
     questions: quizQuestions,
@@ -19,7 +25,6 @@ function App() {
     answer,
     points,
     secondsRemaining,
-    highscore,
     requestOptions,
     errorMessage,
   } = state;
@@ -84,6 +89,53 @@ function App() {
     return () => window.clearInterval(timerId);
   }, [status, index]);
 
+  useEffect(() => {
+    if (status === 'finished' && points > highscore) {
+      setStoredHighscore(points);
+    }
+  }, [status, points, highscore, setStoredHighscore]);
+
+  useEffect(() => {
+    if (status === 'active' && answer !== null) {
+      nextButtonRef.current?.focus();
+    }
+  }, [status, answer, index]);
+
+  useEffect(() => {
+    if (status !== 'active') return undefined;
+
+    function handleKeyDown(event) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
+      const target = event.target;
+
+      if (event.key === 'Enter' && answer !== null) {
+        if (target instanceof HTMLElement && target.closest('[data-quiz-next], a')) return;
+        event.preventDefault();
+        dispatch({
+          type: index === totalQuestions - 1 ? 'finish' : 'nextQuestion',
+        });
+        return;
+      }
+
+      if (answer !== null || !/^[1-4]$/.test(event.key)) return;
+      if (
+        target instanceof HTMLElement
+        && target.closest('input, textarea, select, [contenteditable="true"], a')
+      ) {
+        return;
+      }
+
+      const selectedAnswer = currentQuestion?.options[Number(event.key) - 1];
+      if (selectedAnswer !== undefined) {
+        event.preventDefault();
+        dispatch({ type: 'newAnswer', answer: selectedAnswer });
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [status, answer, index, totalQuestions, currentQuestion]);
+
   function handleStart(options) {
     dispatch({ type: 'start', options });
   }
@@ -147,16 +199,19 @@ function App() {
             onAnswer={(selectedAnswer) => dispatch({ type: 'newAnswer', answer: selectedAnswer })}
           />
           <div className={styles.quizFooter}>
-            <span className={styles.footerHint}>
+            <span className={styles.footerHint} role="status" aria-live="polite" aria-atomic="true">
               {answer === null
-                ? 'Choose the best answer'
+                ? 'Choose an answer, or press 1 through 4.'
                 : answer === currentQuestion.answer
-                  ? 'That’s right!'
-                  : `Not quite — the answer is ${currentQuestion.answer}.`}
+                  ? 'Correct! Press Enter or select Next.'
+                  : `Incorrect. The correct answer is ${currentQuestion.answer}. Press Enter or select Next.`}
             </span>
             {answer !== null && (
               <button
+                ref={nextButtonRef}
                 className={styles.nextButton}
+                data-quiz-next
+                aria-keyshortcuts="Enter"
                 onClick={() => dispatch({
                   type: index === totalQuestions - 1 ? 'finish' : 'nextQuestion',
                 })}
@@ -173,7 +228,7 @@ function App() {
         <ResultScreen
           score={points}
           total={totalQuestions}
-          highscore={highscore}
+          highscore={Math.max(highscore, points)}
           onPlayAgain={() => dispatch({ type: 'restart' })}
         />
       )}

@@ -1,7 +1,13 @@
-import { useState } from 'react';
 import ErrorMessage from './ErrorMessage.jsx';
 import Loading from './Loading.jsx';
+import useLocalStorageState from '../hooks/useLocalStorageState.js';
 import styles from './StartScreen.module.css';
+
+const initialSettings = {
+  categoryId: '9',
+  difficulty: 'easy',
+  amount: '10',
+};
 
 function StartScreen({
   onStart,
@@ -10,10 +16,31 @@ function StartScreen({
   categoriesError,
   onRetryCategories,
 }) {
-  const [categoryId, setCategoryId] = useState('9');
-  const [difficulty, setDifficulty] = useState('easy');
-  const [amount, setAmount] = useState('10');
+  const [savedSettings, setSavedSettings] = useLocalStorageState(
+    'quizzy-last-settings',
+    initialSettings,
+  );
+  const storedSettings = savedSettings && typeof savedSettings === 'object'
+    ? savedSettings
+    : initialSettings;
+  const categoryId = categories.some((category) => category.id === storedSettings.categoryId)
+    ? storedSettings.categoryId
+    : categories.find((category) => category.id === '9')?.id ?? categories[0]?.id ?? '9';
+  const difficulty = ['easy', 'medium', 'hard'].includes(storedSettings.difficulty)
+    ? storedSettings.difficulty
+    : initialSettings.difficulty;
+  const amount = ['5', '10', '15'].includes(String(storedSettings.amount))
+    ? String(storedSettings.amount)
+    : initialSettings.amount;
   const canStart = categoriesStatus === 'ready' && categories.length > 0;
+
+  function updateSetting(name, value) {
+    setSavedSettings((current) => ({
+      ...initialSettings,
+      ...(current && typeof current === 'object' && !Array.isArray(current) ? current : {}),
+      [name]: value,
+    }));
+  }
 
   return (
     <section className={styles.layout}>
@@ -28,7 +55,9 @@ function StartScreen({
         className={styles.card}
         onSubmit={(event) => {
           event.preventDefault();
-          onStart({ amount, categoryId, difficulty });
+          const settings = { amount, categoryId, difficulty };
+          setSavedSettings(settings);
+          onStart(settings);
         }}
       >
         <div className={styles.cardHeading}>
@@ -43,7 +72,7 @@ function StartScreen({
           <span>Choose a category</span>
           <select
             value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value)}
+            onChange={(event) => updateSetting('categoryId', event.target.value)}
             disabled={!canStart}
           >
             {categories.map((category) => (
@@ -66,7 +95,10 @@ function StartScreen({
         <div className={styles.fieldRow}>
           <label className={styles.field}>
             <span>Difficulty</span>
-            <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+            <select
+              value={difficulty}
+              onChange={(event) => updateSetting('difficulty', event.target.value)}
+            >
               <option value="easy">Easy breezy</option>
               <option value="medium">A bit tricky</option>
               <option value="hard">Brain bender</option>
@@ -74,7 +106,7 @@ function StartScreen({
           </label>
           <label className={styles.field}>
             <span>Questions</span>
-            <select value={amount} onChange={(event) => setAmount(event.target.value)}>
+            <select value={amount} onChange={(event) => updateSetting('amount', event.target.value)}>
               <option value="5">5 questions</option>
               <option value="10">10 questions</option>
               <option value="15">15 questions</option>

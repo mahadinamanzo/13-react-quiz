@@ -5,7 +5,6 @@ export const initialQuizState = {
   answer: null,
   points: 0,
   secondsRemaining: 15,
-  highscore: 0,
   requestOptions: null,
   errorMessage: null,
 };
@@ -14,7 +13,6 @@ function finishQuiz(state) {
   return {
     ...state,
     status: 'finished',
-    highscore: Math.max(state.highscore, state.points),
   };
 }
 
@@ -107,7 +105,7 @@ export function quizReducer(state, action) {
       return state.status === 'active' ? finishQuiz(state) : state;
 
     case 'restart':
-      return { ...initialQuizState, highscore: state.highscore };
+      return { ...initialQuizState };
 
     case 'tick':
       if (state.status !== 'active') return state;
