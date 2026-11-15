@@ -51,6 +51,36 @@
   background: #fbfaff;
 }
 
+.answer:disabled {
+  cursor: default;
+}
+
+.answer:disabled:hover {
+  transform: none;
+}
+
+.correct {
+  border-color: #9cdbb5;
+  background: #effaf3;
+  color: #26734a;
+}
+
+.correct .letter {
+  background: #d7f2e0;
+  color: #26734a;
+}
+
+.incorrect {
+  border-color: #f0aaaa;
+  background: #fff3f2;
+  color: #ae4b4b;
+}
+
+.incorrect .letter {
+  background: #ffe0df;
+  color: #ae4b4b;
+}
+
 .letter {
   display: grid;
   width: 30px;
